@@ -11,26 +11,33 @@ static void receive_file(int socket) {
 
     char buffer[BUFFER_SIZE];
 
+    // 1ª linha: status
     int bytes_received = recv_line(socket, buffer, BUFFER_SIZE);
-
     handle_received_bytes(bytes_received, socket);
     buffer[bytes_received] = '\0';
     printf("%s", buffer);
 
-    if (strncmp(buffer, "Deu certo\n", 3) != 0) return;
+    // Verifica se a resposta foi OK
+    if (strncmp(buffer, "OK", 2) != 0) {
+        // Se não for OK, não há mais nada a receber
+        return;
+    }
+
+    // 2ª linha: tamanho do arquivo
     bytes_received = recv_line(socket, buffer, BUFFER_SIZE);
     handle_received_bytes(bytes_received, socket);
-
     buffer[bytes_received] = '\0';
+    printf("%s", buffer);
+
     long filesize = atol(buffer);
     long total_received = 0;
 
+    // 3ª parte: conteúdo do arquivo
     while (total_received < filesize) {
         bytes_received = recv(socket, buffer, BUFFER_SIZE, 0);
         handle_received_bytes(bytes_received, socket);
 
         fwrite(buffer, 1, bytes_received, stdout);
-
         total_received += bytes_received;
     }
 
